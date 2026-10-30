@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>なんじですか？</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 20px;
+    font-family: Arial, "Noto Sans JP", sans-serif;
+    background: #ffffff;
+    color: #222;
+    text-align: center;
+}
+
+.game {
+    max-width: 760px;
+    margin: 0 auto;
+}
+
+.title-area {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    margin: 0;
+}
+
+.title-area .logo {
+    display: block;
+    width: 120px;
+    height: auto;
+}
+
+.logo {
+    width: 120px;
+    height: auto;
+}
+
+h1 {
+    margin: 0;
+    font-size: 32px;
+}
+
+.logo {
+    display: block;
+    width: 120px;
+    height: auto;
+}
+
+.game-area {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+}
+
+.question-count {
+    position: fixed;
+    top: 10px;
+    right: 15px;
+    font-size: 40pt;
+    color: #888;
+    line-height: 1;
+    z-index: 20;
+}
+
+.levels {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.level-button {
+    width: 70px;
+    height: 44px;
+    border: 2px solid #555;
+    border-radius: 8px;
+    background: white;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+.level-button.active {
+    background: #333;
+    color: white;
+}
+
+#bombButton {
+    margin-top: 8px;
+}
+
+.center-area {
+    width: min(460px, 70vw);
+    flex-shrink: 0;
+}
+
+.timer {
+    height: 20px;
+    font-size: 42px;
+    font-weight: bold;
+    color: red;
+    margin-bottom: 5px;
+}
+
+.clock-area {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1;
+    margin: 15px auto 0;
+}
+
+.clock {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+#explosion {
+    position: absolute;
+    left: 50%;
+    top: calc(50% + 15px);
+    transform: translate(-50%, -50%) scale(0.3);
+    display: none;
+    width: 180%;
+    height: 180%;
+    align-items: center;
+    justify-content: center;
+    font-size: min(55vw, 330px);
+    line-height: 1;
+    z-index: 5;
+    pointer-events: none;
+}
+
+#explosion.show {
+    display: flex;
+    animation: explode 1s ease-out forwards;
+}
+
+@keyframes explode {
+    0% {
+        transform: translate(-50%, -50%) scale(0.2);
+        opacity: 0;
+    }
+
+    25% {
+        transform: translate(-50%, -50%) scale(1.0);
+        opacity: 1;
+    }
+
+    55% {
+        transform: translate(-50%, -50%) scale(2.0);
+        opacity: 1;
+    }
+
+    80% {
+        transform: translate(-50%, -50%) scale(3.0);
+        opacity: 1;
+    }
+
+    100% {
+        transform: translate(-50%, -50%) scale(4.0);
+        opacity: 0;
+    }
+}
+
+.controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.control-button {
+    width: 70px;
+    height: 70px;
+    border: none;
+    border-radius: 50%;
+    background: white;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+    font-size: 36px;
+    cursor: pointer;
+}
+
+.control-button:hover {
+    background: #f5f5f5;
+}
+
+#bombButton.active {
+    background: yellow;
+    color: white;
+}
+
+#restartButton {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    display: none;
+    margin: 0;
+    padding: 12px 30px;
+    border: none;
+    border-radius: 8px;
+    background: #333;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    z-index: 10;
+}
+
+#restartButton.show {
+    display: block;
+}
+
+.hidden {
+    display: none !important;
+}
+
+@media (max-width: 700px) {
+
+    .game-area {
+        gap: 8px;
+    }
+
+    .center-area {
+        width: min(460px, 65vw);
+    }
+
+    .level-button {
+        width: 65px;
+        height: 42px;
+        font-size: 16px;
+    }
+
+    .control-button {
+        width: 60px;
+        height: 60px;
+        font-size: 30px;
+    }
+
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="question-count" id="questionCount">
+    0
+</div>
+
+<div class="game">
+
+<div class="title-area">
+    <img src="logo.png" class="logo" alt="ロゴ">
+    <h1>なんじですか？</h1>
+</div>
+
+<div class="game-area">
+
+
+<div class="levels">
+
+    <button
+        class="level-button active"
+        data-level="1">
+        Level 1
+    </button>
+
+    <button
+        class="level-button"
+        data-level="2">
+        Level 2
+    </button>
+
+    <button
+        class="level-button"
+        data-level="3">
+        Level 3
+    </button>
+
+    <button
+        class="level-button"
+        data-level="4">
+        Level 4
+    </button>
+
+    <button
+        type="button"
+        class="level-button"
+        id="bombButton"
+        aria-label="爆弾タイマー">
+        💣
+    </button>
+
+</div>
+
+<div class="center-area">
+
+    <div class="timer" id="timer"></div>
+
+    <div class="clock-area" id="clockArea">
+
+        <svg
+            class="clock"
+            id="clock"
+            viewBox="0 0 400 400"
+            aria-label="アナログ時計">
+
+            <circle
+                cx="200"
+                cy="200"
+                r="190"
+                fill="white"
+                stroke="#333"
+                stroke-width="6">
+            </circle>
+
+            <g
+                id="ticks"
+                stroke="#333"
+                stroke-linecap="round">
+            </g>
+
+            <g
+                id="numbers"
+                fill="#222"
+                text-anchor="middle"
+                dominant-baseline="middle"
+                font-size="34"
+                font-weight="600">
+            </g>
+
+            <line
+                id="hourHand"
+                x1="200"
+                y1="200"
+                x2="200"
+                y2="105"
+                stroke="#222"
+                stroke-width="10"
+                stroke-linecap="round">
+            </line>
+
+            <line
+                id="minuteHand"
+                x1="200"
+                y1="200"
+                x2="200"
+                y2="65"
+                stroke="#222"
+                stroke-width="6"
+                stroke-linecap="round">
+            </line>
+
+            <circle
+                cx="200"
+                cy="200"
+                r="9"
+                fill="#222">
+            </circle>
+
+        </svg>
+
+        <div id="explosion">💥</div>
+
+        <button
+            type="button"
+            id="restartButton">
+            もういちど
+        </button>
+
+    </div>
+
+</div>
+
+<div class="controls">
+
+    <button
+        type="button"
+        class="control-button"
+        id="nextButton"
+        aria-label="次の時計">
+        ▶
+    </button>
+
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+const ticks =
+    document.getElementById("ticks");
+
+const numbers =
+    document.getElementById("numbers");
+
+const hourHand =
+    document.getElementById("hourHand");
+
+const minuteHand =
+    document.getElementById("minuteHand");
+
+const nextButton =
+    document.getElementById("nextButton");
+
+const questionCount =
+    document.getElementById("questionCount");
+
+let questionNumber = 1;
+questionCount.textContent = questionNumber;
+
+const bombButton =
+    document.getElementById("bombButton");
+
+const timerDisplay =
+    document.getElementById("timer");
+
+const explosion =
+    document.getElementById("explosion");
+
+const clock =
+    document.getElementById("clock");
+
+const restartButton =
+    document.getElementById("restartButton");
+
+const levelButtons =
+    document.querySelectorAll(
+        ".level-button[data-level]"
+    );
+
+
+for (let i = 0; i < 60; i++) {
+
+    const angle =
+        i * 6 * Math.PI / 180;
+
+    const outer = 176;
+
+    const inner =
+        i % 5 === 0 ? 160 : 169;
+
+    const x1 =
+        200 + Math.sin(angle) * inner;
+
+    const y1 =
+        200 - Math.cos(angle) * inner;
+
+    const x2 =
+        200 + Math.sin(angle) * outer;
+
+    const y2 =
+        200 - Math.cos(angle) * outer;
+
+    const line =
+        document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "line"
+        );
+
+    line.setAttribute("x1", x1);
+    line.setAttribute("y1", y1);
+    line.setAttribute("x2", x2);
+    line.setAttribute("y2", y2);
+
+    line.setAttribute(
+        "stroke-width",
+        i % 5 === 0 ? "4" : "2"
+    );
+
+    ticks.appendChild(line);
+}
+
+
+for (let n = 1; n <= 12; n++) {
+
+    const angle =
+        n * 30 * Math.PI / 180;
+
+    const x =
+        200 + Math.sin(angle) * 135;
+
+    const y =
+        200 - Math.cos(angle) * 135;
+
+    const text =
+        document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "text"
+        );
+
+    text.setAttribute("x", x);
+    text.setAttribute("y", y);
+
+    text.textContent = n;
+
+    numbers.appendChild(text);
+}
+
+
+let currentLevel = 1;
+
+let currentMinutes = 0;
+
+let previousMinutes = null;
+
+let timer = null;
+
+let timeLeft = 10;
+
+let bombActive = false;
+
+let exploded = false;
+
+function generateTime() {
+
+    const candidates = [];
+
+    // Level 1：○時
+    if (currentLevel >= 1) {
+
+        for (let hour = 0; hour < 12; hour++) {
+
+            candidates.push(
+                hour * 60
+            );
+
+        }
+
+    }
+
+    // Level 2：○時30分
+    if (currentLevel >= 2) {
+
+        for (let hour = 0; hour < 12; hour++) {
+
+            candidates.push(
+                hour * 60 + 30
+            );
+
+        }
+
+    }
+
+    // Level 3：5分刻み
+    if (currentLevel >= 3) {
+
+        for (let hour = 0; hour < 12; hour++) {
+
+            for (let minute = 5; minute < 60; minute += 5) {
+
+                candidates.push(
+                    hour * 60 + minute
+                );
+
+            }
+
+        }
+
+    }
+
+    // Level 4：1分刻み
+    if (currentLevel >= 4) {
+
+        for (let hour = 0; hour < 12; hour++) {
+
+            for (let minute = 0; minute < 60; minute++) {
+
+                candidates.push(
+                    hour * 60 + minute
+                );
+
+            }
+
+        }
+
+    }
+
+    // 直前の時刻と近すぎるものを除外
+    let filteredCandidates = candidates;
+
+    if (previousMinutes !== null) {
+
+        const minDifference =
+            currentLevel <= 2 ? 60 : 10;
+
+        filteredCandidates =
+            candidates.filter(minutes => {
+
+                let difference =
+                    Math.abs(
+                        minutes - previousMinutes
+                    );
+
+                // 12時間表示なので、0時と11時台などの境界も考慮
+                difference =
+                    Math.min(
+                        difference,
+                        720 - difference
+                    );
+
+                return difference > minDifference;
+
+            });
+
+    }
+
+    // 条件に合う候補がなければ、元の候補から選ぶ
+    if (filteredCandidates.length === 0) {
+
+        filteredCandidates = candidates;
+
+    }
+
+    currentMinutes =
+        filteredCandidates[
+            Math.floor(
+                Math.random() *
+                filteredCandidates.length
+            )
+        ];
+
+    previousMinutes =
+        currentMinutes;
+
+    const hour =
+        Math.floor(currentMinutes / 60);
+
+    const minute =
+        currentMinutes % 60;
+
+    drawClock(hour, minute);
+}
+
+function drawClock(hour, minute) {
+
+    const hourAngle =
+        (hour % 12) * 30 +
+        minute * 0.5;
+
+    const minuteAngle =
+        minute * 6;
+
+    hourHand.setAttribute(
+        "transform",
+        `rotate(${hourAngle} 200 200)`
+    );
+
+    minuteHand.setAttribute(
+        "transform",
+        `rotate(${minuteAngle} 200 200)`
+    );
+}
+
+
+function stopTimer() {
+
+    if (timer !== null) {
+
+        clearInterval(timer);
+
+        timer = null;
+    }
+}
+
+
+function startBomb() {
+
+    stopTimer();
+
+    bombActive = true;
+
+    timeLeft = 10;
+
+    timerDisplay.textContent =
+        timeLeft;
+
+    bombButton.classList.add("active");
+
+    timer =
+        setInterval(() => {
+
+            timeLeft--;
+
+            timerDisplay.textContent =
+                timeLeft;
+
+            if (timeLeft <= 0) {
+
+                stopTimer();
+
+                explodeClock();
+            }
+
+        }, 1000);
+}
+
+
+function explodeClock() {
+
+    exploded = true;
+
+    stopTimer();
+
+    timerDisplay.textContent = "";
+
+    explosion.classList.remove(
+        "show"
+    );
+
+    void explosion.offsetWidth;
+
+    explosion.classList.add("show");
+
+    setTimeout(() => {
+
+        clock.style.visibility =
+            "hidden";
+
+    }, 700);
+
+    setTimeout(() => {
+
+        explosion.classList.remove(
+            "show"
+        );
+
+        restartButton.classList.add(
+            "show"
+        );
+
+        nextButton.classList.add(
+            "hidden"
+        );
+
+    }, 1000);
+}
+
+
+bombButton.addEventListener(
+    "click",
+    () => {
+
+        if (exploded) {
+            return;
+        }
+
+        if (bombActive) {
+
+            stopTimer();
+
+            bombActive = false;
+
+            bombButton.classList.remove(
+                "active"
+            );
+
+            timerDisplay.textContent = "";
+
+        } else {
+
+            startBomb();
+        }
+
+    }
+);
+
+
+nextButton.addEventListener(
+    "click",
+    () => {
+
+        if (exploded) {
+            return;
+        }
+
+       questionNumber++;
+questionCount.textContent = questionNumber;
+
+generateTime();
+
+        if (bombActive) {
+
+            startBomb();
+
+        }
+
+    }
+);
+
+
+levelButtons.forEach(button => {
+
+    button.addEventListener(
+        "click",
+        () => {
+
+            if (exploded) {
+                return;
+            }
+
+            currentLevel =
+                Number(
+                    button.dataset.level
+                );
+
+            levelButtons.forEach(
+                b =>
+                    b.classList.remove(
+                        "active"
+                    )
+            );
+
+            button.classList.add(
+                "active"
+            );
+
+            generateTime();
+
+            if (bombActive) {
+
+                startBomb();
+
+            }
+
+        }
+    );
+
+});
+
+
+restartButton.addEventListener(
+    "click",
+    () => {
+
+        stopTimer();
+
+        exploded = false;
+
+        clock.style.visibility =
+            "visible";
+
+        explosion.classList.remove(
+            "show"
+        );
+
+        restartButton.classList.remove(
+            "show"
+        );
+
+        nextButton.classList.remove(
+            "hidden"
+        );
+
+        generateTime();
+
+        if (bombActive) {
+
+            startBomb();
+
+        } else {
+
+            timerDisplay.textContent = "";
+
+        }
+
+    }
+);
+
+
+generateTime();
+
+</script>
+
+</body>
+</html>
