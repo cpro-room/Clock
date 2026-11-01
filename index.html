@@ -124,7 +124,7 @@ h1 {
     height: 40px;
     line-height: 40px;
     margin-top: 5px;
-    font-size: clamp(14px, 3.8vw, 24px);
+    font-size: clamp(16px, 4.5vw, 28px);
     font-weight: bold;
     white-space: nowrap;
     visibility: hidden;
@@ -544,6 +544,7 @@ let exploded = false;
 function generateTime() {
 
     answerDisplay.style.visibility = "hidden";
+    answerVisible = false;
 
     const candidates = [];
 
