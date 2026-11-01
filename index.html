@@ -120,6 +120,16 @@ h1 {
     margin: 15px auto 0;
 }
 
+.answer-display {
+    height: 40px;
+    line-height: 40px;
+    margin-top: 5px;
+    font-size: clamp(14px, 3.8vw, 24px);
+    font-weight: bold;
+    white-space: nowrap;
+    visibility: hidden;
+}
+
 .clock {
     width: 100%;
     height: 100%;
@@ -382,6 +392,8 @@ h1 {
 
     </div>
 
+    <div class="answer-display" id="answerDisplay"></div>
+
 </div>
 
 <div class="controls">
@@ -413,6 +425,9 @@ const hourHand =
 
 const minuteHand =
     document.getElementById("minuteHand");
+
+const answerDisplay =
+    document.getElementById("answerDisplay");
 
 const nextButton =
     document.getElementById("nextButton");
@@ -528,44 +543,39 @@ let exploded = false;
 
 function generateTime() {
 
+    answerDisplay.style.visibility = "hidden";
+
     const candidates = [];
 
     // Level 1：○時
-    if (currentLevel >= 1) {
+    if (currentLevel === 1) {
 
         for (let hour = 0; hour < 12; hour++) {
-
-            candidates.push(
-                hour * 60
-            );
-
+            candidates.push(hour * 60);
         }
 
     }
 
-    // Level 2：○時30分
-    if (currentLevel >= 2) {
+    // Level 2：○時・○時30分
+    if (currentLevel === 2) {
 
         for (let hour = 0; hour < 12; hour++) {
-
-            candidates.push(
-                hour * 60 + 30
-            );
-
+            candidates.push(hour * 60);
+            candidates.push(hour * 60 + 30);
         }
 
     }
 
-    // Level 3：5分刻み
-    if (currentLevel >= 3) {
+    // Level 3：5分刻み（ちょうど・半を除く）
+    if (currentLevel === 3) {
 
         for (let hour = 0; hour < 12; hour++) {
 
             for (let minute = 5; minute < 60; minute += 5) {
 
-                candidates.push(
-                    hour * 60 + minute
-                );
+                if (minute === 30) continue;
+
+                candidates.push(hour * 60 + minute);
 
             }
 
@@ -573,16 +583,16 @@ function generateTime() {
 
     }
 
-    // Level 4：1分刻み
-    if (currentLevel >= 4) {
+    // Level 4：1分刻み（ちょうど・半を除く）
+    if (currentLevel === 4) {
 
         for (let hour = 0; hour < 12; hour++) {
 
-            for (let minute = 0; minute < 60; minute++) {
+            for (let minute = 1; minute < 60; minute++) {
 
-                candidates.push(
-                    hour * 60 + minute
-                );
+                if (minute === 30) continue;
+
+                candidates.push(hour * 60 + minute);
 
             }
 
@@ -590,52 +600,55 @@ function generateTime() {
 
     }
 
-    // 直前の時刻と近すぎるものを除外
-    let filteredCandidates = candidates;
+// 直前の時計と同じ「時」または「分」を除外
+let filteredCandidates = candidates;
 
-    if (previousMinutes !== null) {
+if (previousMinutes !== null) {
 
-        const minDifference =
-            currentLevel <= 2 ? 60 : 10;
+    const previousHour =
+        Math.floor(previousMinutes / 60);
+
+    const previousMinute =
+        previousMinutes % 60;
+
+    filteredCandidates =
+        candidates.filter(minutes => {
+
+            const hour = Math.floor(minutes / 60);
+            const minute = minutes % 60;
+
+            return hour !== previousHour &&
+                   minute !== previousMinute;
+
+        });
+
+    // 候補がない場合は、同じ「時」だけを避ける
+    if (filteredCandidates.length === 0) {
 
         filteredCandidates =
-            candidates.filter(minutes => {
-
-                let difference =
-                    Math.abs(
-                        minutes - previousMinutes
-                    );
-
-                // 12時間表示なので、0時と11時台などの境界も考慮
-                difference =
-                    Math.min(
-                        difference,
-                        720 - difference
-                    );
-
-                return difference > minDifference;
-
-            });
+            candidates.filter(minutes =>
+                Math.floor(minutes / 60) !== previousHour
+            );
 
     }
 
-    // 条件に合う候補がなければ、元の候補から選ぶ
+    // それでも候補がない場合
     if (filteredCandidates.length === 0) {
 
         filteredCandidates = candidates;
 
     }
 
-    currentMinutes =
-        filteredCandidates[
-            Math.floor(
-                Math.random() *
-                filteredCandidates.length
-            )
-        ];
+}
 
-    previousMinutes =
-        currentMinutes;
+currentMinutes =
+    filteredCandidates[
+        Math.floor(
+            Math.random() * filteredCandidates.length
+        )
+    ];
+
+previousMinutes = currentMinutes;
 
     const hour =
         Math.floor(currentMinutes / 60);
@@ -643,7 +656,87 @@ function generateTime() {
     const minute =
         currentMinutes % 60;
 
-    drawClock(hour, minute);
+drawClock(hour, minute);
+answerDisplay.textContent =
+    convertTimeToHiragana(hour, minute);
+    }
+
+function convertTimeToHiragana(hour, minute) {
+
+    const hourReadings = [
+        "じゅうにじ",
+        "いちじ",
+        "にじ",
+        "さんじ",
+        "よじ",
+        "ごじ",
+        "ろくじ",
+        "しちじ",
+        "はちじ",
+        "くじ",
+        "じゅうじ",
+        "じゅういちじ"
+    ];
+
+    const onesReading = {
+        1: "いっぷん",
+        2: "にふん",
+        3: "さんぷん",
+        4: "よんぷん",
+        5: "ごふん",
+        6: "ろっぷん",
+        7: "ななふん",
+        8: "はっぷん",
+        9: "きゅうふん"
+    };
+
+    const tensReading = {
+        10: "じゅう",
+        20: "にじゅう",
+        30: "さんじゅう",
+        40: "よんじゅう",
+        50: "ごじゅう"
+    };
+
+    const exactTensReading = {
+        10: "じゅっぷん",
+        20: "にじゅっぷん",
+        40: "よんじゅっぷん",
+        50: "ごじゅっぷん"
+    };
+
+    let minuteReading = "";
+
+    if (minute === 30) {
+
+        minuteReading = "はん";
+
+    } else if (minute !== 0) {
+
+        const tens = Math.floor(minute / 10) * 10;
+        const ones = minute % 10;
+
+        if (ones === 0) {
+
+            minuteReading = exactTensReading[tens];
+
+        } else if (tens === 0) {
+
+            minuteReading = onesReading[ones];
+
+        } else {
+
+            minuteReading =
+                tensReading[tens] + onesReading[ones];
+
+        }
+    }
+
+    const hourReading = hourReadings[hour];
+
+    return minute === 0
+        ? hourReading
+        : hourReading + "　" + minuteReading;
 }
 
 function drawClock(hour, minute) {
@@ -779,6 +872,7 @@ bombButton.addEventListener(
     }
 );
 
+let answerVisible = false;
 
 nextButton.addEventListener(
     "click",
@@ -788,20 +882,27 @@ nextButton.addEventListener(
             return;
         }
 
-       questionNumber++;
-questionCount.textContent = questionNumber;
+        if (!answerVisible) {
 
-generateTime();
+            answerDisplay.style.visibility = "visible";
+            answerVisible = true;
 
-        if (bombActive) {
+        } else {
 
-            startBomb();
+            questionNumber++;
+            questionCount.textContent = questionNumber;
+
+            generateTime();
+            answerVisible = false;
+
+            if (bombActive) {
+                startBomb();
+            }
 
         }
 
     }
 );
-
 
 levelButtons.forEach(button => {
 
